@@ -21,63 +21,110 @@ header{
 }
 header h1{margin:0;font-size:26px}
 header p{margin:8px 0 0}
+
 .container{
-  max-width:900px;
+  max-width:1000px;
   margin:auto;
   padding:15px;
 }
-.card{
-  background:white;
-  border-radius:14px;
-  padding:18px;
-  margin-bottom:15px;
-  box-shadow:0 2px 8px #0001;
-}
-.grid{
+
+.cards{
   display:grid;
   grid-template-columns:repeat(2,1fr);
   gap:12px;
+  margin:15px 0;
 }
-.stat{
-  padding:15px;
-  border-radius:12px;
-  background:#eef7ee;
+.card{
+  background:white;
+  padding:18px;
+  border-radius:14px;
+  box-shadow:0 2px 8px #0001;
 }
-.stat b{
-  display:block;
-  font-size:22px;
-  margin-top:5px;
+.card h3{margin:0 0 8px;font-size:15px}
+.card strong{font-size:23px}
+
+nav{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-bottom:15px;
 }
-input,select,textarea,button{
+nav button{
+  border:0;
+  padding:12px 5px;
+  border-radius:10px;
+  background:#e8f5e9;
+  color:#1b5e20;
+  font-weight:bold;
+}
+
+section{
+  display:none;
+  background:white;
+  padding:18px;
+  border-radius:14px;
+  margin-bottom:15px;
+  box-shadow:0 2px 8px #0001;
+}
+section.active{display:block}
+
+h2{
+  margin-top:0;
+  color:#2e7d32;
+}
+
+input,select{
   width:100%;
   padding:12px;
-  margin-top:7px;
-  margin-bottom:12px;
+  margin:6px 0 12px;
   border:1px solid #ccc;
   border-radius:8px;
   font-size:15px;
 }
-button{
+
+button.action{
+  width:100%;
+  padding:13px;
+  border:0;
+  border-radius:9px;
   background:#2e7d32;
   color:white;
-  border:0;
+  font-size:16px;
   font-weight:bold;
+  margin-top:5px;
 }
-button.secondary{background:#555}
-label{font-weight:bold}
+
 table{
   width:100%;
   border-collapse:collapse;
+  margin-top:15px;
   font-size:14px;
 }
 th,td{
-  padding:9px;
+  padding:10px 6px;
   border-bottom:1px solid #ddd;
   text-align:left;
 }
-@media(max-width:600px){
-  .grid{grid-template-columns:1fr 1fr}
-  table{font-size:12px}
+th{background:#e8f5e9}
+
+.delete{
+  background:#c62828;
+  color:white;
+  border:0;
+  padding:6px 9px;
+  border-radius:6px;
+}
+
+.info{
+  background:#fff8e1;
+  padding:12px;
+  border-radius:8px;
+  margin-bottom:12px;
+}
+
+@media(min-width:700px){
+  .cards{grid-template-columns:repeat(4,1fr)}
+  nav{grid-template-columns:repeat(6,1fr)}
 }
 </style>
 </head>
@@ -86,351 +133,177 @@ th,td{
 
 <header>
   <h1>🍌 Banana Farm Management</h1>
-  <p>G9 Banana Farm • Ram Biotech</p>
+  <p>Banana G9 Farm Management System</p>
 </header>
 
 <div class="container">
 
+<nav>
+  <button onclick="show('dashboard')">🏠 Dashboard</button>
+  <button onclick="show('farm')">🌱 Farm</button>
+  <button onclick="show('daily')">📋 Daily</button>
+  <button onclick="show('harvest')">🍌 Harvest</button>
+  <button onclick="show('sales')">💰 Sales</button>
+  <button onclick="show('expenses')">💸 Expenses</button>
+</nav>
+
+<section id="dashboard" class="active">
+<h2>📊 Dashboard</h2>
+
+<div class="cards">
 <div class="card">
-<h2>🌱 Farm Details</h2>
-
-<div class="grid">
-<div class="stat">Area<b>82 R</b></div>
-<div class="stat">Plants<b>3,200</b></div>
-<div class="stat">Variety<b>G9</b></div>
-<div class="stat">Plant Rate<b>₹19</b></div>
+<h3>🌱 Farm Area</h3>
+<strong id="dashArea">0</strong> Acre
 </div>
-
-<p><b>Spacing:</b> 5 × 5.5 feet</p>
-<p><b>Planting:</b> November 2026</p>
-<p><b>Company:</b> Ram Biotech</p>
-<p><b>Planned Plant Cost:</b> ₹60,800</p>
-</div>
-
-
-<div class="card">
-<h2>📊 Farm Summary</h2>
-
-<div class="grid">
-<div class="stat">
-Total Expense
-<b id="totalExpense">₹60,800</b>
-</div>
-
-<div class="stat">
-Total Sales
-<b id="totalSales">₹0</b>
-</div>
-
-<div class="stat">
-Net Profit
-<b id="profit">-₹60,800</b>
-</div>
-
-<div class="stat">
-Cost / Plant
-<b id="costPlant">₹19</b>
-</div>
-</div>
-</div>
-
 
 <div class="card">
-<h2>📝 Add Daily Farm Record</h2>
+<h3>🍌 Harvest</h3>
+<strong id="dashHarvest">0</strong> Kg
+</div>
+
+<div class="card">
+<h3>💰 Sales</h3>
+<strong>₹<span id="dashSales">0</span></strong>
+</div>
+
+<div class="card">
+<h3>💸 Expenses</h3>
+<strong>₹<span id="dashExpenses">0</span></strong>
+</div>
+</div>
+
+<div class="info">
+<b>Net Income:</b> ₹<span id="dashProfit">0</span>
+</div>
+</section>
+
+<section id="farm">
+<h2>🌱 Farm Profile</h2>
+
+<label>Farm Name</label>
+<input id="farmName" placeholder="उदा. Dipak Banana Farm">
+
+<label>Village</label>
+<input id="village" placeholder="गाँव का नाम">
+
+<label>Total Area (Acre)</label>
+<input id="area" type="number" placeholder="उदा. 5">
+
+<label>Variety</label>
+<select id="variety">
+<option>G9 Banana</option>
+<option>Other</option>
+</select>
+
+<label>Planting Date</label>
+<input id="plantingDate" type="date">
+
+<button class="action" onclick="saveFarm()">💾 Save Farm Profile</button>
+
+<div id="farmResult"></div>
+</section>
+
+<section id="daily">
+<h2>📋 Daily Farm Record</h2>
 
 <label>Date</label>
-<input type="date" id="date">
+<input id="dailyDate" type="date">
 
-<label>Field</label>
-<input type="text" id="field" placeholder="उदा. Field 1">
+<label>Work / Activity</label>
+<input id="dailyWork" placeholder="उदा. Fertilizer, irrigation, spraying">
 
-<label>Work Performed</label>
-<textarea id="work" placeholder="आज खेत में क्या काम हुआ?"></textarea>
-
-<label>Number of Workers</label>
-<input type="number" id="workers" value="0">
-
-<label>Labour Cost (₹)</label>
-<input type="number" id="labour" value="0">
-
-<label>Fertilizer Name</label>
-<input type="text" id="fertilizer" placeholder="उदा. Urea">
-
-<label>Fertilizer Quantity</label>
-<input type="text" id="fertQty" placeholder="उदा. 25 kg">
-
-<label>Fertilizer Cost (₹)</label>
-<input type="number" id="fertCost" value="0">
-
-<label>Pesticide / Medicine</label>
-<input type="text" id="pesticide" placeholder="दवाई का नाम">
-
-<label>Pesticide Cost (₹)</label>
-<input type="number" id="pestCost" value="0">
-
-<label>Irrigation Cost (₹)</label>
-<input type="number" id="irrigation" value="0">
-
-<label>Diesel / Machinery Cost (₹)</label>
-<input type="number" id="machinery" value="0">
-
-<label>Other Expenses (₹)</label>
-<input type="number" id="other" value="0">
+<label>Workers</label>
+<input id="workers" type="number" placeholder="Workers">
 
 <label>Notes</label>
-<textarea id="notes" placeholder="कोई अतिरिक्त जानकारी"></textarea>
+<input id="dailyNotes" placeholder="आज का काम">
 
-<button onclick="saveRecord()">💾 Save Daily Record</button>
-</div>
-
-
-<div class="card">
-<h2>📋 Daily Records</h2>
+<button class="action" onclick="addDaily()">➕ Add Daily Record</button>
 
 <table>
 <thead>
 <tr>
 <th>Date</th>
-<th>Work</th>
+<th>Activity</th>
 <th>Workers</th>
-<th>Cost</th>
+<th>Action</th>
 </tr>
 </thead>
-
-<tbody id="recordTable"></tbody>
+<tbody id="dailyTable"></tbody>
 </table>
-</div>
+</section>
 
-
-<div class="card">
+<section id="harvest">
 <h2>🍌 Harvest Record</h2>
 
-<label>Harvest Date</label>
-<input type="date" id="harvestDate">
+<label>Date</label>
+<input id="harvestDate" type="date">
 
-<label>Number of Bunches</label>
-<input type="number" id="bunches" value="0">
+<label>Quantity (Kg)</label>
+<input id="harvestQty" type="number" placeholder="उदा. 850">
 
-<label>Total Weight (kg)</label>
-<input type="number" id="weight" value="0">
+<label>Quality</label>
+<select id="quality">
+<option>Grade A</option>
+<option>Grade B</option>
+<option>Grade C</option>
+</select>
 
-<label>Quality / Grade</label>
-<input type="text" id="grade" placeholder="उदा. A Grade">
+<label>Notes</label>
+<input id="harvestNotes" placeholder="Harvest details">
 
-<button onclick="saveHarvest()">Save Harvest</button>
-</div>
+<button class="action" onclick="addHarvest()">➕ Add Harvest</button>
 
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Kg</th>
+<th>Quality</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody id="harvestTable"></tbody>
+</table>
+</section>
 
-<div class="card">
+<section id="sales">
 <h2>💰 Sales Record</h2>
 
-<label>Sale Date</label>
-<input type="date" id="saleDate">
+<label>Date</label>
+<input id="salesDate" type="date">
 
-<label>Market / Buyer</label>
-<input type="text" id="buyer" placeholder="Buyer name">
+<label>Quantity (Kg)</label>
+<input id="salesQty" type="number" placeholder="उदा. 500">
 
-<label>Quantity (kg)</label>
-<input type="number" id="saleQty" value="0">
+<label>Rate per Kg (₹)</label>
+<input id="salesRate" type="number" placeholder="उदा. 25">
 
-<label>Rate per kg (₹)</label>
-<input type="number" id="rate" value="0">
+<label>Buyer</label>
+<input id="buyer" placeholder="व्यापारी / ग्राहक">
 
-<button onclick="saveSale()">Save Sale</button>
-</div>
+<button class="action" onclick="addSale()">➕ Add Sale</button>
 
-
-<div class="card">
-<h2>📈 Production & Sales</h2>
-<p><b>Total Bunches:</b> <span id="totalBunches">0</span></p>
-<p><b>Total Production:</b> <span id="totalWeight">0</span> kg</p>
-<p><b>Total Sales:</b> ₹<span id="salesDisplay">0</span></p>
-<p><b>Net Profit:</b> ₹<span id="profitDisplay">-60800</span></p>
-</div>
-
-
-<div class="card">
-<button class="secondary" onclick="clearData()">
-⚠️ Reset Local Records
-</button>
-</div>
-
-</div>
-
-
-<script>
-
-let records = JSON.parse(localStorage.getItem("banana_records") || "[]");
-let harvests = JSON.parse(localStorage.getItem("banana_harvests") || "[]");
-let sales = JSON.parse(localStorage.getItem("banana_sales") || "[]");
-
-const plantCost = 60800;
-
-function saveRecord(){
-
-let r={
-date:document.getElementById("date").value,
-field:document.getElementById("field").value,
-work:document.getElementById("work").value,
-workers:Number(document.getElementById("workers").value),
-labour:Number(document.getElementById("labour").value),
-fertilizer:document.getElementById("fertilizer").value,
-fertQty:document.getElementById("fertQty").value,
-fertCost:Number(document.getElementById("fertCost").value),
-pesticide:document.getElementById("pesticide").value,
-pestCost:Number(document.getElementById("pestCost").value),
-irrigation:Number(document.getElementById("irrigation").value),
-machinery:Number(document.getElementById("machinery").value),
-other:Number(document.getElementById("other").value),
-notes:document.getElementById("notes").value
-};
-
-r.total =
-r.labour +
-r.fertCost +
-r.pestCost +
-r.irrigation +
-r.machinery +
-r.other;
-
-records.push(r);
-
-localStorage.setItem("banana_records",JSON.stringify(records));
-
-alert("Daily record saved successfully ✅");
-
-displayRecords();
-updateSummary();
-}
-
-
-function saveHarvest(){
-
-let h={
-date:document.getElementById("harvestDate").value,
-bunches:Number(document.getElementById("bunches").value),
-weight:Number(document.getElementById("weight").value),
-grade:document.getElementById("grade").value
-};
-
-harvests.push(h);
-
-localStorage.setItem("banana_harvests",JSON.stringify(harvests));
-
-alert("Harvest record saved 🍌");
-
-updateSummary();
-}
-
-
-function saveSale(){
-
-let qty=Number(document.getElementById("saleQty").value);
-let rate=Number(document.getElementById("rate").value);
-
-let s={
-date:document.getElementById("saleDate").value,
-buyer:document.getElementById("buyer").value,
-quantity:qty,
-rate:rate,
-total:qty*rate
-};
-
-sales.push(s);
-
-localStorage.setItem("banana_sales",JSON.stringify(sales));
-
-alert("Sale record saved 💰");
-
-updateSummary();
-}
-
-
-function displayRecords(){
-
-let table=document.getElementById("recordTable");
-
-table.innerHTML="";
-
-records.forEach(r=>{
-
-table.innerHTML+=`
+<table>
+<thead>
 <tr>
-<td>${r.date}</td>
-<td>${r.work}</td>
-<td>${r.workers}</td>
-<td>₹${r.total}</td>
+<th>Date</th>
+<th>Kg</th>
+<th>Rate</th>
+<th>Total</th>
+<th>Action</th>
 </tr>
-`;
+</thead>
+<tbody id="salesTable"></tbody>
+</table>
+</section>
 
-});
+<section id="expenses">
+<h2>💸 Expense Record</h2>
 
-}
+<label>Date</label>
+<input id="expenseDate" type="date">
 
-
-function updateSummary(){
-
-let extraExpense=records.reduce((sum,r)=>sum+r.total,0);
-
-let totalExpense=plantCost+extraExpense;
-
-let totalSales=sales.reduce((sum,s)=>sum+s.total,0);
-
-let profit=totalSales-totalExpense;
-
-let bunches=harvests.reduce((sum,h)=>sum+h.bunches,0);
-
-let weight=harvests.reduce((sum,h)=>sum+h.weight,0);
-
-document.getElementById("totalExpense").innerText=
-"₹"+totalExpense.toLocaleString("en-IN");
-
-document.getElementById("totalSales").innerText=
-"₹"+totalSales.toLocaleString("en-IN");
-
-document.getElementById("profit").innerText=
-"₹"+profit.toLocaleString("en-IN");
-
-document.getElementById("costPlant") .innerText=
-"₹"+(totalExpense/3200).toFixed(2);
-
-document.getElementById("totalBunches").innerText=bunches;
-
-document.getElementById("totalWeight").innerText=weight;
-
-document.getElementById("salesDisplay").innerText=
-totalSales.toLocaleString("en-IN");
-
-document.getElementById("profitDisplay").innerText=
-profit.toLocaleString("en-IN");
-
-}
-
-
-function clearData(){
-
-if(confirm("क्या आप सभी local records हटाना चाहते हैं?")){
-
-localStorage.removeItem("banana_records");
-localStorage.removeItem("banana_harvests");
-localStorage.removeItem("banana_sales");
-
-records=[];
-harvests=[];
-sales=[];
-
-displayRecords();
-updateSummary();
-
-}
-
-}
-
-
-displayRecords();
-updateSummary();
-
-</script>
-
-</body>
-</html>
+<label>Category</label>
+<select id="expenseCategory">
+<option>
