@@ -1,0 +1,13 @@
+{
+  "crop": "Banana",
+  "variety": "G9",
+  "company": "Ram Biotech",
+  "area_r": 82,
+  "plants": 3200,
+  "spacing_feet": "5 x 5.5",
+  "planting_month": "November 2026",
+  "plant_rate_inr": 19,
+  "planned_plant_cost_inr": 60800,
+  "status": "Planting planned",
+  "actual_expenses_recorded": 0
+}
