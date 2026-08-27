@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍌 Banana Farm Management</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f4f7f2;
+  color:#222;
+}
+header{
+  background:#2e7d32;
+  color:white;
+  padding:20px;
+  text-align:center;
+}
+header h1{margin:0;font-size:26px}
+header p{margin:8px 0 0}
+.container{
+  max-width:900px;
+  margin:auto;
+  padding:15px;
+}
+.card{
+  background:white;
+  border-radius:14px;
+  padding:18px;
+  margin-bottom:15px;
+  box-shadow:0 2px 8px #0001;
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+}
+.stat{
+  padding:15px;
+  border-radius:12px;
+  background:#eef7ee;
+}
+.stat b{
+  display:block;
+  font-size:22px;
+  margin-top:5px;
+}
+input,select,textarea,button{
+  width:100%;
+  padding:12px;
+  margin-top:7px;
+  margin-bottom:12px;
+  border:1px solid #ccc;
+  border-radius:8px;
+  font-size:15px;
+}
+button{
+  background:#2e7d32;
+  color:white;
+  border:0;
+  font-weight:bold;
+}
+button.secondary{background:#555}
+label{font-weight:bold}
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+}
+th,td{
+  padding:9px;
+  border-bottom:1px solid #ddd;
+  text-align:left;
+}
+@media(max-width:600px){
+  .grid{grid-template-columns:1fr 1fr}
+  table{font-size:12px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🍌 Banana Farm Management</h1>
+  <p>G9 Banana Farm • Ram Biotech</p>
+</header>
+
+<div class="container">
+
+<div class="card">
+<h2>🌱 Farm Details</h2>
+
+<div class="grid">
+<div class="stat">Area<b>82 R</b></div>
+<div class="stat">Plants<b>3,200</b></div>
+<div class="stat">Variety<b>G9</b></div>
+<div class="stat">Plant Rate<b>₹19</b></div>
+</div>
+
+<p><b>Spacing:</b> 5 × 5.5 feet</p>
+<p><b>Planting:</b> November 2026</p>
+<p><b>Company:</b> Ram Biotech</p>
+<p><b>Planned Plant Cost:</b> ₹60,800</p>
+</div>
+
+
+<div class="card">
+<h2>📊 Farm Summary</h2>
+
+<div class="grid">
+<div class="stat">
+Total Expense
+<b id="totalExpense">₹60,800</b>
+</div>
+
+<div class="stat">
+Total Sales
+<b id="totalSales">₹0</b>
+</div>
+
+<div class="stat">
+Net Profit
+<b id="profit">-₹60,800</b>
+</div>
+
+<div class="stat">
+Cost / Plant
+<b id="costPlant">₹19</b>
+</div>
+</div>
+</div>
+
+
+<div class="card">
+<h2>📝 Add Daily Farm Record</h2>
+
+<label>Date</label>
+<input type="date" id="date">
+
+<label>Field</label>
+<input type="text" id="field" placeholder="उदा. Field 1">
+
+<label>Work Performed</label>
+<textarea id="work" placeholder="आज खेत में क्या काम हुआ?"></textarea>
+
+<label>Number of Workers</label>
+<input type="number" id="workers" value="0">
+
+<label>Labour Cost (₹)</label>
+<input type="number" id="labour" value="0">
+
+<label>Fertilizer Name</label>
+<input type="text" id="fertilizer" placeholder="उदा. Urea">
+
+<label>Fertilizer Quantity</label>
+<input type="text" id="fertQty" placeholder="उदा. 25 kg">
+
+<label>Fertilizer Cost (₹)</label>
+<input type="number" id="fertCost" value="0">
+
+<label>Pesticide / Medicine</label>
+<input type="text" id="pesticide" placeholder="दवाई का नाम">
+
+<label>Pesticide Cost (₹)</label>
+<input type="number" id="pestCost" value="0">
+
+<label>Irrigation Cost (₹)</label>
+<input type="number" id="irrigation" value="0">
+
+<label>Diesel / Machinery Cost (₹)</label>
+<input type="number" id="machinery" value="0">
+
+<label>Other Expenses (₹)</label>
+<input type="number" id="other" value="0">
+
+<label>Notes</label>
+<textarea id="notes" placeholder="कोई अतिरिक्त जानकारी"></textarea>
+
+<button onclick="saveRecord()">💾 Save Daily Record</button>
+</div>
+
+
+<div class="card">
+<h2>📋 Daily Records</h2>
+
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Work</th>
+<th>Workers</th>
+<th>Cost</th>
+</tr>
+</thead>
+
+<tbody id="recordTable"></tbody>
+</table>
+</div>
+
+
+<div class="card">
+<h2>🍌 Harvest Record</h2>
+
+<label>Harvest Date</label>
+<input type="date" id="harvestDate">
+
+<label>Number of Bunches</label>
+<input type="number" id="bunches" value="0">
+
+<label>Total Weight (kg)</label>
+<input type="number" id="weight" value="0">
+
+<label>Quality / Grade</label>
+<input type="text" id="grade" placeholder="उदा. A Grade">
+
+<button onclick="saveHarvest()">Save Harvest</button>
+</div>
+
+
+<div class="card">
+<h2>💰 Sales Record</h2>
+
+<label>Sale Date</label>
+<input type="date" id="saleDate">
+
+<label>Market / Buyer</label>
+<input type="text" id="buyer" placeholder="Buyer name">
+
+<label>Quantity (kg)</label>
+<input type="number" id="saleQty" value="0">
+
+<label>Rate per kg (₹)</label>
+<input type="number" id="rate" value="0">
+
+<button onclick="saveSale()">Save Sale</button>
+</div>
+
+
+<div class="card">
+<h2>📈 Production & Sales</h2>
+<p><b>Total Bunches:</b> <span id="totalBunches">0</span></p>
+<p><b>Total Production:</b> <span id="totalWeight">0</span> kg</p>
+<p><b>Total Sales:</b> ₹<span id="salesDisplay">0</span></p>
+<p><b>Net Profit:</b> ₹<span id="profitDisplay">-60800</span></p>
+</div>
+
+
+<div class="card">
+<button class="secondary" onclick="clearData()">
+⚠️ Reset Local Records
+</button>
+</div>
+
+</div>
+
+
+<script>
+
+let records = JSON.parse(localStorage.getItem("banana_records") || "[]");
+let harvests = JSON.parse(localStorage.getItem("banana_harvests") || "[]");
+let sales = JSON.parse(localStorage.getItem("banana_sales") || "[]");
+
+const plantCost = 60800;
+
+function saveRecord(){
+
+let r={
+date:document.getElementById("date").value,
+field:document.getElementById("field").value,
+work:document.getElementById("work").value,
+workers:Number(document.getElementById("workers").value),
+labour:Number(document.getElementById("labour").value),
+fertilizer:document.getElementById("fertilizer").value,
+fertQty:document.getElementById("fertQty").value,
+fertCost:Number(document.getElementById("fertCost").value),
+pesticide:document.getElementById("pesticide").value,
+pestCost:Number(document.getElementById("pestCost").value),
+irrigation:Number(document.getElementById("irrigation").value),
+machinery:Number(document.getElementById("machinery").value),
+other:Number(document.getElementById("other").value),
+notes:document.getElementById("notes").value
+};
+
+r.total =
+r.labour +
+r.fertCost +
+r.pestCost +
+r.irrigation +
+r.machinery +
+r.other;
+
+records.push(r);
+
+localStorage.setItem("banana_records",JSON.stringify(records));
+
+alert("Daily record saved successfully ✅");
+
+displayRecords();
+updateSummary();
+}
+
+
+function saveHarvest(){
+
+let h={
+date:document.getElementById("harvestDate").value,
+bunches:Number(document.getElementById("bunches").value),
+weight:Number(document.getElementById("weight").value),
+grade:document.getElementById("grade").value
+};
+
+harvests.push(h);
+
+localStorage.setItem("banana_harvests",JSON.stringify(harvests));
+
+alert("Harvest record saved 🍌");
+
+updateSummary();
+}
+
+
+function saveSale(){
+
+let qty=Number(document.getElementById("saleQty").value);
+let rate=Number(document.getElementById("rate").value);
+
+let s={
+date:document.getElementById("saleDate").value,
+buyer:document.getElementById("buyer").value,
+quantity:qty,
+rate:rate,
+total:qty*rate
+};
+
+sales.push(s);
+
+localStorage.setItem("banana_sales",JSON.stringify(sales));
+
+alert("Sale record saved 💰");
+
+updateSummary();
+}
+
+
+function displayRecords(){
+
+let table=document.getElementById("recordTable");
+
+table.innerHTML="";
+
+records.forEach(r=>{
+
+table.innerHTML+=`
+<tr>
+<td>${r.date}</td>
+<td>${r.work}</td>
+<td>${r.workers}</td>
+<td>₹${r.total}</td>
+</tr>
+`;
+
+});
+
+}
+
+
+function updateSummary(){
+
+let extraExpense=records.reduce((sum,r)=>sum+r.total,0);
+
+let totalExpense=plantCost+extraExpense;
+
+let totalSales=sales.reduce((sum,s)=>sum+s.total,0);
+
+let profit=totalSales-totalExpense;
+
+let bunches=harvests.reduce((sum,h)=>sum+h.bunches,0);
+
+let weight=harvests.reduce((sum,h)=>sum+h.weight,0);
+
+document.getElementById("totalExpense").innerText=
+"₹"+totalExpense.toLocaleString("en-IN");
+
+document.getElementById("totalSales").innerText=
+"₹"+totalSales.toLocaleString("en-IN");
+
+document.getElementById("profit").innerText=
+"₹"+profit.toLocaleString("en-IN");
+
+document.getElementById("costPlant") .innerText=
+"₹"+(totalExpense/3200).toFixed(2);
+
+document.getElementById("totalBunches").innerText=bunches;
+
+document.getElementById("totalWeight").innerText=weight;
+
+document.getElementById("salesDisplay").innerText=
+totalSales.toLocaleString("en-IN");
+
+document.getElementById("profitDisplay").innerText=
+profit.toLocaleString("en-IN");
+
+}
+
+
+function clearData(){
+
+if(confirm("क्या आप सभी local records हटाना चाहते हैं?")){
+
+localStorage.removeItem("banana_records");
+localStorage.removeItem("banana_harvests");
+localStorage.removeItem("banana_sales");
+
+records=[];
+harvests=[];
+sales=[];
+
+displayRecords();
+updateSummary();
+
+}
+
+}
+
+
+displayRecords();
+updateSummary();
+
+</script>
+
+</body>
+</html>
