@@ -307,3 +307,348 @@ th{background:#e8f5e9}
 <label>Category</label>
 <select id="expenseCategory">
 <option>
+Fertilizer</option>
+<option>Pesticide</option>
+<option>Labour</option>
+<option>Irrigation</option>
+<option>Transport</option>
+<option>Planting Material</option>
+<option>Other</option>
+</select>
+
+<label>Amount (₹)</label>
+<input id="expenseAmount" type="number" placeholder="उदा. 1500">
+
+<label>Notes</label>
+<input id="expenseNotes" placeholder="Expense details">
+
+<button class="action" onclick="addExpense()">➕ Add Expense</button>
+
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Category</th>
+<th>Amount</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody id="expensesTable"></tbody>
+</table>
+
+</section>
+</div>
+
+<script>
+
+const KEY = "bananaFarmManagementData";
+
+let data = {
+  farm:{},
+  daily:[],
+  harvest:[],
+  sales:[],
+  expenses:[]
+};
+
+function load(){
+  try{
+    const saved = localStorage.getItem(KEY);
+    if(saved) data = JSON.parse(saved);
+  }catch(e){}
+
+  setToday();
+  fillFarm();
+  renderAll();
+}
+
+function save(){
+  localStorage.setItem(KEY, JSON.stringify(data));
+  renderAll();
+}
+
+function today(){
+  return new Date().toISOString().slice(0,10);
+}
+
+function setToday(){
+  ["dailyDate","harvestDate","salesDate","expenseDate"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el && !el.value) el.value=today();
+  });
+}
+
+function show(id){
+
+  document.querySelectorAll("section")
+    .forEach(s=>s.classList.remove("active"));
+
+  const section=document.getElementById(id);
+
+  if(section) section.classList.add("active");
+
+  document.querySelectorAll("nav button")
+    .forEach(b=>{
+      b.classList.toggle(
+        "active",
+        b.getAttribute("onclick") === "show('"+id+"')"
+      );
+    });
+}
+
+function val(id){
+  return document.getElementById(id).value.trim();
+}
+
+function num(id){
+  return Number(document.getElementById(id).value) || 0;
+}
+
+function fillFarm(){
+
+  const f=data.farm || {};
+
+  if(f.farmName) document.getElementById("farmName").value=f.farmName;
+  if(f.village) document.getElementById("village").value=f.village;
+  if(f.area) document.getElementById("area").value=f.area;
+  if(f.variety) document.getElementById("variety").value=f.variety;
+  if(f.plantingDate) document.getElementById("plantingDate").value=f.plantingDate;
+}
+
+function saveFarm(){
+
+  data.farm={
+    farmName:val("farmName"),
+    village:val("village"),
+    area:num("area"),
+    variety:val("variety"),
+    plantingDate:val("plantingDate")
+  };
+
+  save();
+
+  document.getElementById("farmResult").innerHTML =
+    "<div class='info'>✅ Farm Profile Saved Successfully</div>";
+}
+
+function addDaily(){
+
+  const item={
+    date:val("dailyDate"),
+    work:val("dailyWork"),
+    workers:num("workers"),
+    notes:val("dailyNotes")
+  };
+
+  if(!item.date || !item.work){
+    alert("Date और Activity भरें");
+    return;
+  }
+
+  data.daily.push(item);
+  save();
+
+  document.getElementById("dailyWork").value="";
+  document.getElementById("workers").value="";
+  document.getElementById("dailyNotes").value="";
+}
+
+function addHarvest(){
+
+  const item={
+    date:val("harvestDate"),
+    qty:num("harvestQty"),
+    quality:val("quality"),
+    notes:val("harvestNotes")
+  };
+
+  if(!item.date || item.qty<=0){
+    alert("Date और Quantity भरें");
+    return;
+  }
+
+  data.harvest.push(item);
+  save();
+
+  document.getElementById("harvestQty").value="";
+  document.getElementById("harvestNotes").value="";
+}
+
+function addSale(){
+
+  const qty=num("salesQty");
+  const rate=num("salesRate");
+
+  const item={
+    date:val("salesDate"),
+    qty:qty,
+    rate:rate,
+    buyer:val("buyer"),
+    total:qty*rate
+  };
+
+  if(!item.date || qty<=0 || rate<=0){
+    alert("Date, Quantity और Rate भरें");
+    return;
+  }
+
+  data.sales.push(item);
+  save();
+
+  document.getElementById("salesQty").value="";
+  document.getElementById("salesRate").value="";
+  document.getElementById("buyer").value="";
+}
+
+function addExpense(){
+
+  const item={
+    date:val("expenseDate"),
+    category:val("expenseCategory"),
+    amount:num("expenseAmount"),
+    notes:val("expenseNotes")
+  };
+
+  if(!item.date || item.amount<=0){
+    alert("Date और Amount भरें");
+    return;
+  }
+
+  data.expenses.push(item);
+  save();
+
+  document.getElementById("expenseAmount").value="";
+  document.getElementById("expenseNotes").value="";
+}
+
+function removeItem(type,index){
+
+  if(confirm("यह record delete करें?")){
+
+    data[type].splice(index,1);
+    save();
+
+  }
+}
+
+function renderAll(){
+
+  const area = Number(data.farm?.area) || 0;
+
+  const harvest =
+    data.harvest.reduce(
+      (sum,x)=>sum+(Number(x.qty)||0),0
+    );
+
+  const sales =
+    data.sales.reduce(
+      (sum,x)=>sum+(Number(x.total)||0),0
+    );
+
+  const expenses =
+    data.expenses.reduce(
+      (sum,x)=>sum+(Number(x.amount)||0),0
+    );
+
+  document.getElementById("dashArea").textContent=area;
+  document.getElementById("dashHarvest").textContent=harvest;
+  document.getElementById("dashSales").textContent=sales;
+  document.getElementById("dashExpenses").textContent=expenses;
+  document.getElementById("dashProfit").textContent=sales-expenses;
+
+
+  document.getElementById("dailyTable").innerHTML =
+    data.daily.length ?
+
+    data.daily.map((x,i)=>`
+
+      <tr>
+        <td>${x.date}</td>
+        <td>${x.work}</td>
+        <td>${x.workers}</td>
+        <td>
+          <button class="delete"
+          onclick="removeItem('daily',${i})">
+          Delete
+          </button>
+        </td>
+      </tr>
+
+    `).join("") :
+
+    "<tr><td colspan='4'>No records</td></tr>";
+
+
+  document.getElementById("harvestTable").innerHTML =
+    data.harvest.length ?
+
+    data.harvest.map((x,i)=>`
+
+      <tr>
+        <td>${x.date}</td>
+        <td>${x.qty}</td>
+        <td>${x.quality}</td>
+        <td>
+          <button class="delete"
+          onclick="removeItem('harvest',${i})">
+          Delete
+          </button>
+        </td>
+      </tr>
+
+    `).join("") :
+
+    "<tr><td colspan='4'>No records</td></tr>";
+
+
+  document.getElementById("salesTable").innerHTML =
+    data.sales.length ?
+
+    data.sales.map((x,i)=>`
+
+      <tr>
+        <td>${x.date}</td>
+        <td>${x.qty}</td>
+        <td>₹${x.rate}</td>
+        <td>₹${x.total}</td>
+        <td>
+          <button class="delete"
+          onclick="removeItem('sales',${i})">
+          Delete
+          </button>
+        </td>
+      </tr>
+
+    `).join("") :
+
+    "<tr><td colspan='5'>No records</td></tr>";
+
+
+  document.getElementById("expensesTable").innerHTML =
+    data.expenses.length ?
+
+    data.expenses.map((x,i)=>`
+
+      <tr>
+        <td>${x.date}</td>
+        <td>${x.category}</td>
+        <td>₹${x.amount}</td>
+        <td>
+          <button class="delete"
+          onclick="removeItem('expenses',${i})">
+          Delete
+          </button>
+        </td>
+      </tr>
+
+    `).join("") :
+
+    "<tr><td colspan='4'>No records</td></tr>";
+}
+
+load();
+
+</script>
+
+</body>
+</html>
