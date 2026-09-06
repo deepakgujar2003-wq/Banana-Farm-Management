@@ -1,0 +1,59 @@
+name: Fix Gemini Standard Endpoint
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/fix-gemini-standard-endpoint.yml'
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Patch Gemini request
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          p = Path('kisan-ai.html')
+          s = p.read_text(encoding='utf-8')
+          pattern = r'async function gemini\(q\)\{.*?\}\s*async function sendMessage\(\)'
+          replacement = '''async function gemini(q){
+          let apiKey=localStorage.getItem(KEY);
+          if(!apiKey){openSettings();throw new Error('पहले Gemini API Key डालें।')}
+          const selectedModel=localStorage.getItem(MODELKEY)||DEFAULT_MODEL;
+          const modelList=[selectedModel].concat(MODELS.filter(m=>m!==selectedModel));
+          let lastError='Gemini API request failed';
+          for(const selected of modelList){
+            const cleanModel=(selected||'gemini-1.5-flash').replace(/^models\\//,'');
+            const url=`https://generativelanguage.googleapis.com/v1beta/models/${cleanModel}:generateContent?key=${apiKey.trim()}`;
+            const userPrompt=systemPrompt()+'\\n\\nकिसान का सवाल:\\n'+q;
+            const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:userPrompt}]}]})});
+            let data={};
+            try{data=await response.json()}catch(e){}
+            if(response.ok){
+              const text=data&&data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts?data.candidates[0].content.parts.map(p=>p.text||'').join(''):'';
+              if(text){localStorage.setItem(MODELKEY,cleanModel);return text}
+              lastError='Gemini ने कोई जवाब नहीं दिया।';
+            }else{
+              lastError=data&&data.error&&data.error.message?data.error.message:'Gemini API request failed';
+              if(!(response.status===404||response.status===400||response.status===401||response.status===403))break;
+            }
+          }
+          throw new Error(lastError)
+          }async function sendMessage()'''
+          ns, n = re.subn(pattern, replacement, s, count=1, flags=re.S)
+          if n != 1:
+              raise SystemExit('gemini function pattern not found')
+          p.write_text(ns, encoding='utf-8')
+          print('Patched Gemini endpoint:', 'standard v1beta models/{model}:generateContent?key=...')
+      - name: Commit patched file
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kisan-ai.html
+          git diff --cached --quiet || git commit -m 'Use standard Gemini v1beta endpoint format'
+          git push
