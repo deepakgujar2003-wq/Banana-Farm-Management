@@ -18,12 +18,10 @@ jobs:
           p=Path('kisan-ai.html')
           s=p.read_text(encoding='utf-8')
           start=s.find('async function gemini(q){')
-          if start < 0:
-              raise SystemExit('gemini function not found')
           end=s.find('async function sendMessage', start)
-          if end < 0:
-              raise SystemExit('sendMessage boundary not found')
-          new='''async function gemini(q){
+          if start < 0 or end < 0:
+              raise SystemExit('Gemini function boundary not found')
+          new="""async function gemini(q){
 const apiKey=(localStorage.getItem('gemini_api_key')||localStorage.getItem(KEY)||'').trim();
 let model=(localStorage.getItem('gemini_model')||localStorage.getItem(MODELKEY)||'gemini-1.5-flash').trim();
 model=model.replace(/^models\\//,'');
@@ -39,7 +37,7 @@ const data=await res.json();
 if(!res.ok){throw new Error(data.error?.message||'API request failed')}
 return data.candidates[0].content.parts[0].text;
 }
-'''
+"""
           s=s[:start]+new+s[end:]
           p.write_text(s,encoding='utf-8')
       - name: Commit update
@@ -48,5 +46,5 @@ return data.candidates[0].content.parts[0].text;
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add kisan-ai.html
           git diff --cached --quiet && exit 0
-          git commit -m "Fix Gemini API request implementation"
+          git commit -m "Use direct Gemini v1beta generateContent call"
           git push
