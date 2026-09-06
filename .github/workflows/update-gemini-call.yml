@@ -1,5 +1,8 @@
 name: Update Gemini API call
 on:
+  push:
+    paths:
+      - '.github/workflows/update-gemini-call.yml'
   workflow_dispatch:
 jobs:
   update:
