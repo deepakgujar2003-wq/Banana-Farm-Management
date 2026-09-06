@@ -1,0 +1,48 @@
+name: Fix Gemini API Integration
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix-gemini:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch Gemini integration
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('kisan-ai.html')
+          s = p.read_text(encoding='utf-8')
+
+          s = s.replace("const FARM='bananaFarm',KEY='kisanGeminiKey',MODEL='gemini-1.5-flash';", "const FARM='bananaFarm',KEY='kisanGeminiKey',MODELKEY='kisanGeminiModel',DEFAULT_MODEL='gemini-1.5-flash',MODELS=['gemini-1.5-flash','gemini-1.5-pro'];")
+          s = s.replace("<input id=\"key\" type=\"password\" placeholder=\"AIza... अपनी Gemini API Key डालें\">", "<input id=\"key\" type=\"password\" placeholder=\"AIza... अपनी Gemini API Key डालें\"><select id=\"model\" style=\"width:100%;margin-top:9px;padding:12px;border:1px solid #bbb;border-radius:10px;font-size:14px\"><option value=\"gemini-1.5-flash\">gemini-1.5-flash (Fast)</option><option value=\"gemini-1.5-pro\">gemini-1.5-pro (Fallback)</option></select>")
+          s = s.replace("Model: <b>gemini-1.5-flash</b>", "Model: <b>gemini-1.5-flash</b> / <b>gemini-1.5-pro</b>")
+          s = s.replace("$('key').value=localStorage.getItem(KEY)||'';$('modal').style.display='flex'", "$('key').value=localStorage.getItem(KEY)||'';$('model').value=localStorage.getItem(MODELKEY)||DEFAULT_MODEL;$('modal').style.display='flex'")
+          s = s.replace("localStorage.setItem(KEY,k);closeSettings();add('✅ Gemini API Key सेव हो गई। अब कोई भी खेती का सवाल पूछें.','ai','Gemini AI ready')", "localStorage.setItem(KEY,k);localStorage.setItem(MODELKEY,$('model').value);closeSettings();add('✅ Gemini API Key और model सेव हो गए। अब कोई भी खेती का सवाल पूछें।','ai','Gemini AI ready')")
+          s = s.replace("localStorage.setItem(KEY,k);closeSettings();add('✅ Gemini API Key सेव हो गई। अब कोई भी खेती का सवाल पूछें।','ai','Gemini AI ready')", "localStorage.setItem(KEY,k);localStorage.setItem(MODELKEY,$('model').value);closeSettings();add('✅ Gemini API Key और model सेव हो गए। अब कोई भी खेती का सवाल पूछें।','ai','Gemini AI ready')")
+
+          start = s.find('async function gemini(q){')
+          end = s.find('async function sendMessage()', start)
+          if start == -1 or end == -1:
+              raise SystemExit('gemini function boundaries not found')
+          new_fn = '''async function gemini(q){let key=localStorage.getItem(KEY);if(!key){openSettings();throw new Error('पहले Gemini API Key डालें।')}let selected=localStorage.getItem(MODELKEY)||DEFAULT_MODEL;let models=[selected].concat(MODELS.filter(m=>m!==selected));let last='Gemini API request failed';for(let model of models){let url='https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent?key='+encodeURIComponent(key);let userPrompt=systemPrompt()+'\\n\\nकिसान का सवाल:\\n'+q;let body={contents:[{parts:[{text:userPrompt}]}],generationConfig:{temperature:.35,maxOutputTokens:1200}};let res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});let data={};try{data=await res.json()}catch(e){}if(res.ok){let text=data&&data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts?data.candidates[0].content.parts.map(p=>p.text||'').join(''):'';if(text){localStorage.setItem(MODELKEY,model);return text}last='Gemini ने कोई जवाब नहीं दिया।'}else{last=data&&data.error&&data.error.message?data.error.message:'Gemini API request failed';if(!(res.status===404||res.status===400||res.status===401||res.status===403))break}}throw new Error(last)}'''
+          s = s[:start] + new_fn + s[end:]
+          s = s.replace("'Gemini AI • '+MODEL", "'Gemini AI • '+(localStorage.getItem(MODELKEY)||DEFAULT_MODEL)")
+          p.write_text(s, encoding='utf-8')
+      - name: Commit patched file
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add kisan-ai.html
+          if git diff --cached --quiet; then
+            echo "No changes needed"
+          else
+            git commit -m "Fix Gemini v1beta endpoint and model fallback"
+            git push
+          fi
