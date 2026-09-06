@@ -1,14 +1,10 @@
 name: Update Gemini API call
-on:
-  push:
-    paths:
-      - '.github/workflows/update-gemini-call.yml'
-  workflow_dispatch:
+on: push
+permissions:
+  contents: write
 jobs:
   update:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
       - name: Replace Gemini function
@@ -46,5 +42,5 @@ return data.candidates[0].content.parts[0].text;
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add kisan-ai.html
           git diff --cached --quiet && exit 0
-          git commit -m "Use direct Gemini v1beta generateContent call"
+          git commit -m "Update Kisan Mitra Gemini API call"
           git push
