@@ -1,0 +1,40 @@
+name: Remove Kisan Mitra AI
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  remove:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove AI integration
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          s = re.sub(r'<style id="kisan-ai-fab-style">.*?</style>', '', s, count=1, flags=re.S)
+          s = re.sub(r'<button id="kisanAiFab".*?</div><header>', '<header>', s, count=1, flags=re.S)
+          s = re.sub(r'function openKisanAI\(\)\{.*?document\.addEventListener\(\x27keydown\x27,function\(e\)\{if\(e\.key===\x27Escape\x27\)closeKisanAI\(\)\}\);', '', s, flags=re.S)
+          s = s.replace('src="kisan-ai.html"', '')
+          p.write_text(s, encoding='utf-8')
+          PY
+
+          rm -f kisan-ai.html
+          rm -f .github/workflows/finalize-kisan-ai.yml
+          rm -f .github/workflows/update-gemini-call.yml
+          rm -f .github/workflows/remove-kisan-ai.yml
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Remove Kisan Mitra AI chatbot' || exit 0
+          git push
