@@ -1,0 +1,84 @@
+name: Update Gadi Accounting
+on:
+  push:
+    paths:
+      - .github/workflows/update-gadi-accounting.yml
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update Gadi accounting in main app
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+
+          old='''<div class="live-summary"><div class="summary-line"><span>🍌 Kul Ghad (Total Bunches)</span><strong id="liveSummaryGhad">0</strong></div><div class="summary-line"><span>⚖️ Kul Patti Wajan (Total Patti Weight)</span><strong><span id="liveSummaryPatti">0</span> Kg</strong></div></div><div class="form-grid"><div><label>Date</label><input id="gadiDate" type="date"></div><div><label>Gadi Number</label><input id="gadiNumber" placeholder="e.g. Gadi 1 / MH-19-AB-1234"></div></div><button class="action" onclick="saveGadiRecord()">💾 Save Gadi Record</button>'''
+          new='''<div class="live-summary"><div class="summary-line"><span>🍌 Kul Ghad (Total Bunches)</span><strong id="liveSummaryGhad">0</strong></div><div class="summary-line"><span>⚖️ Kul Patti Wajan (Total Patti Weight)</span><strong><span id="liveSummaryPatti">0</span> Kg</strong></div><div class="summary-line"><span>🍌 Actual Banana Output</span><strong><span id="gadiActualOutput">0</span> Kg</strong></div></div><div class="info"><b>⚖️ Gadi Weight & Majduri</b><label>NET WT (Weighbridge) — Kg</label><input id="gadiNetWeight" type="number" min="0" step="0.01" placeholder="e.g. 14210" oninput="updateGadiAccounting()"><small>Actual Output = NET WT − Patti Weight</small><label>Harvest Majduri (₹ / Plant)</label><input id="gadiMajduriRate" type="number" min="0" step="0.01" value="10" placeholder="e.g. 10" oninput="updateGadiAccounting()"><div class="calc">👷 Total Harvest Majduri: ₹<span id="gadiMajduriTotal">0</span> <span class="muted">(Harvested Plants × ₹/Plant)</span></div></div><div class="form-grid"><div><label>Date</label><input id="gadiDate" type="date"></div><div><label>Gadi Number</label><input id="gadiNumber" placeholder="e.g. Gadi 1 / MH-19-AB-1234"></div></div><button class="action" onclick="saveGadiRecord()">💾 Save Gadi Record</button>'''
+          if old not in s:
+              raise SystemExit('UI anchor not found')
+          s=s.replace(old,new,1)
+
+          old='''<table><thead><tr><th>Date</th><th>Gadi No.</th><th>Total Ghad</th><th>Total Patti Weight</th><th>Action</th></tr></thead>'''
+          new='''<table><thead><tr><th>Date</th><th>Gadi No.</th><th>Total Ghad</th><th>NET WT</th><th>Patti Weight</th><th>Actual Output</th><th>Harvest Majduri</th><th>Action</th></tr></thead>'''
+          if old not in s:
+              raise SystemExit('Table anchor not found')
+          s=s.replace(old,new,1)
+
+          old='''function updateGadiSummary(){$('liveSummaryGhad').textContent=getLiveGhad()}function pattiRowHtml'''
+          new='''function updateGadiSummary(){$('liveSummaryGhad').textContent=getLiveGhad();updateGadiAccounting()}function updateGadiAccounting(){let net=num($('gadiNetWeight')?.value),patti=getPattiEntries().reduce((s,x)=>s+x.weight,0),actual=Math.max(0,net-patti),rate=num($('gadiMajduriRate')?.value),majduri=getLiveGhad()*rate;if($('gadiActualOutput'))$('gadiActualOutput').textContent=actual.toLocaleString('en-IN',{maximumFractionDigits:2});if($('gadiMajduriTotal'))$('gadiMajduriTotal').textContent=majduri.toLocaleString('en-IN',{maximumFractionDigits:2})}function pattiRowHtml'''
+          if old not in s:
+              raise SystemExit('Summary anchor not found')
+          s=s.replace(old,new,1)
+
+          old='''function resetGadiForm(){initPattiGrid();$('liveRoundCount').textContent='0';$('liveTotalGhad').value='0';$('liveTotalPatti').textContent='0';$('liveSummaryGhad').textContent='0';$('liveSummaryPatti').textContent='0';$('gadiResult').innerHTML='';renderRoundTicks();updateGadiSummary()}function saveGadiRecord(){let date=$('gadiDate').value,gadi=$('gadiNumber').value.trim(),ghad=getLiveGhad(),entries=getPattiEntries(),patti=entries.reduce((s,x)=>s+x.weight,0);if(!date||!gadi){alert('Date और Gadi Number भरें।');return}if(ghad<=0){alert('कम से कम 1 Ghad count करें।');return}set('gadi',[...arr('gadi'),{date,gadi,ghad,pattiWeight:patti,pattiCount:entries.length,pattiEntries:entries}]);$('gadiResult').innerHTML='<div class="info success">✅ Gadi record saved.</div>';resetGadiForm();$('gadiDate').value=new Date().toISOString().slice(0,10);$('gadiNumber').value='';render()}'''
+          new='''function resetGadiForm(){initPattiGrid();$('liveRoundCount').textContent='0';$('liveTotalGhad').value='0';$('liveTotalPatti').textContent='0';$('liveSummaryGhad').textContent='0';$('liveSummaryPatti').textContent='0';$('gadiNetWeight').value='';$('gadiMajduriRate').value='10';$('gadiActualOutput').textContent='0';$('gadiMajduriTotal').textContent='0';$('gadiResult').innerHTML='';renderRoundTicks();updateGadiSummary()}function saveGadiRecord(){let date=$('gadiDate').value,gadi=$('gadiNumber').value.trim(),ghad=getLiveGhad(),entries=getPattiEntries(),patti=entries.reduce((s,x)=>s+x.weight,0),netWeight=num($('gadiNetWeight').value),actualOutput=Math.max(0,netWeight-patti),majduriRate=num($('gadiMajduriRate').value),harvestMajduri=ghad*majduriRate;if(!date||!gadi){alert('Date और Gadi Number भरें।');return}if(ghad<=0){alert('कम से कम 1 Ghad count करें।');return}if(netWeight<=0){alert('NET WT (Weighbridge) भरें।');return}if(patti>netWeight){alert('Patti Weight NET WT से ज्यादा नहीं हो सकता।');return}set('gadi',[...arr('gadi'),{date,gadi,ghad,netWeight,pattiWeight:patti,actualOutput,pattiCount:entries.length,pattiEntries:entries,majduriRate,harvestMajduri}]);$('gadiResult').innerHTML='<div class="info success">✅ Gadi record saved. Actual Output: '+actualOutput.toLocaleString('en-IN',{maximumFractionDigits:2})+' Kg • Harvest Majduri: ₹'+harvestMajduri.toLocaleString('en-IN',{maximumFractionDigits:2})+'</div>';resetGadiForm();$('gadiDate').value=new Date().toISOString().slice(0,10);$('gadiNumber').value='';render()}'''
+          if old not in s:
+              raise SystemExit('Save anchor not found')
+          s=s.replace(old,new,1)
+
+          old='''function careItemsText(r){'''
+          new='''function gadiOutput(r){let n=num(r.netWeight),p=num(r.pattiWeight);return num(r.actualOutput)||Math.max(0,n-p)}function gadiMajduri(r){return num(r.harvestMajduri)||(num(r.ghad)*num(r.majduriRate||10))}function careItemsText(r){'''
+          if old not in s:
+              raise SystemExit('Helper anchor not found')
+          s=s.replace(old,new,1)
+
+          old="""arr('gadi').forEach(r=>out.push({date:r.date,type:'Harvest',details:'Gadi '+esc(r.gadi)+' • Ghad: '+num(r.ghad).toLocaleString('en-IN')+' • Patti: '+num(r.pattiWeight).toLocaleString('en-IN')+' Kg',amount:0}));"""
+          new="""arr('gadi').forEach(r=>{out.push({date:r.date,type:'Harvest',details:'Gadi '+esc(r.gadi)+' • Ghad: '+num(r.ghad).toLocaleString('en-IN')+' • NET WT: '+num(r.netWeight).toLocaleString('en-IN')+' Kg • Patti: '+num(r.pattiWeight).toLocaleString('en-IN')+' Kg • Actual Output: '+gadiOutput(r).toLocaleString('en-IN')+' Kg',amount:0});let m=gadiMajduri(r);if(m>0)out.push({date:r.date,type:'Harvest Majduri',details:'Gadi '+esc(r.gadi)+' • '+num(r.ghad).toLocaleString('en-IN')+' Plants × ₹'+num(r.majduriRate||10).toLocaleString('en-IN')+' / Plant',amount:-m})});"""
+          if old not in s:
+              raise SystemExit('Khata anchor not found')
+          s=s.replace(old,new,1)
+
+          old="""let h=arr('harvest').reduce((s,r)=>s+num(r.qty),0),s=arr('sales').reduce((x,r)=>x+num(r.amount||num(r.qty)*num(r.rate)),0),e=arr('expenses').reduce((x,r)=>x+num(r.amount),0)+arr('daily').reduce((x,r)=>x+num(r.cost),0)+arr('care').reduce((x,r)=>x+num(r.cost),0);"""
+          new="""let h=arr('harvest').reduce((s,r)=>s+num(r.qty),0)+arr('gadi').reduce((s,r)=>s+gadiOutput(r),0),s=arr('sales').reduce((x,r)=>x+num(r.amount||num(r.qty)*num(r.rate)),0),e=arr('expenses').reduce((x,r)=>x+num(r.amount),0)+arr('daily').reduce((x,r)=>x+num(r.cost),0)+arr('care').reduce((x,r)=>x+num(r.cost),0)+arr('gadi').reduce((x,r)=>x+gadiMajduri(r),0);"""
+          if old not in s:
+              raise SystemExit('Dashboard anchor not found')
+          s=s.replace(old,new,1)
+
+          old="""$('gadiTable').innerHTML=rows('gadi',(r,i)=>'<tr><td>'+esc(r.date)+'</td><td>'+esc(r.gadi)+'</td><td>'+num(r.ghad)+'</td><td>'+num(r.pattiWeight).toLocaleString('en-IN',{maximumFractionDigits:2})+' Kg</td><td><button class=\"delete\" onclick=\"del(\\'gadi\\','+i+')\">Delete</button></td></tr>');"""
+          new="""$('gadiTable').innerHTML=rows('gadi',(r,i)=>'<tr><td>'+esc(r.date)+'</td><td>'+esc(r.gadi)+'</td><td>'+num(r.ghad)+'</td><td>'+num(r.netWeight).toLocaleString('en-IN',{maximumFractionDigits:2})+' Kg</td><td>'+num(r.pattiWeight).toLocaleString('en-IN',{maximumFractionDigits:2})+' Kg</td><td>'+gadiOutput(r).toLocaleString('en-IN',{maximumFractionDigits:2})+' Kg</td><td>₹'+gadiMajduri(r).toLocaleString('en-IN',{maximumFractionDigits:2})+'</td><td><button class=\"delete\" onclick=\"del(\\'gadi\\','+i+')\">Delete</button></td></tr>');"""
+          if old not in s:
+              raise SystemExit('Gadi render anchor not found')
+          s=s.replace(old,new,1)
+
+          old="""function updateLivePattiTotal(){let entries=getPattiEntries(),total=entries.reduce((s,x)=>s+x.weight,0);$('liveTotalPatti').textContent=total.toLocaleString('en-IN',{maximumFractionDigits:2});$('liveSummaryPatti').textContent=total.toLocaleString('en-IN',{maximumFractionDigits:2})}"""
+          new="""function updateLivePattiTotal(){let entries=getPattiEntries(),total=entries.reduce((s,x)=>s+x.weight,0);$('liveTotalPatti').textContent=total.toLocaleString('en-IN',{maximumFractionDigits:2});$('liveSummaryPatti').textContent=total.toLocaleString('en-IN',{maximumFractionDigits:2});updateGadiAccounting()}"""
+          if old not in s:
+              raise SystemExit('Patti update anchor not found')
+          s=s.replace(old,new,1)
+
+          old="""let data={version:12,farm:JSON.parse(localStorage.getItem(K.farm)||'{}'),daily:arr('daily'),care:arr('care'),harvest:arr('harvest'),sales:arr('sales'),expenses:arr('expenses'),gadi:arr('gadi')};"""
+          new="""let data={version:13,farm:JSON.parse(localStorage.getItem(K.farm)||'{}'),daily:arr('daily'),care:arr('care'),harvest:arr('harvest'),sales:arr('sales'),expenses:arr('expenses'),gadi:arr('gadi')};"""
+          s=s.replace(old,new,1)
+
+          p.write_text(s,encoding='utf-8')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet || git commit -m 'Update Gadi Patti deduction and harvest labour'
+          git push
